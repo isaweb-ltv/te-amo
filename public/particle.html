@@ -36,7 +36,7 @@
 
         // Detectar movil y ajustar cantidad de particulas
         const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-        const PARTICLE_COUNT = isMobile ? 1200 : 2500;
+        const PARTICLE_COUNT = isMobile ? 2500 : 5000;
 
         // Simula el patrón "lub-dub" de un corazón real
         function getHeartbeat(time) {
@@ -141,7 +141,7 @@
                 } else {
                     // Transicion: restaurar opacidad y tamano para el texto
                     this.opacity += (1 - this.opacity) * 0.05;
-                    this.size += (1.4 - this.size) * 0.05;
+                    this.size += (1.1 - this.size) * 0.05;
 
                     // Morfismo elastico hacia el punto objetivo
                     let dx = this.baseX - this.x;
@@ -217,7 +217,7 @@
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             
             // Recoger pixeles iluminados (step 2 para rendimiento en movil)
-            const scanStep = isMobile ? 2 : 1;
+            const scanStep = 2;
             const allPts = [];
             for (let y = 0; y < canvas.height; y += scanStep) {
                 for (let x = 0; x < canvas.width; x += scanStep) {
