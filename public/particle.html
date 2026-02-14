@@ -31,7 +31,7 @@
         let msgIndex = 0;
         let started = false;
         let heartMode = false;
-        let heartbeatPhase = 0;
+        let heartbeatStartTime = 0;
 
         // Simula el patrón "lub-dub" de un corazón real
         function getHeartbeat(time) {
@@ -101,14 +101,16 @@
                 if (heartMode) {
                     // Latido realista: las partículas se expanden desde el centro del corazón
                     const beat = getHeartbeat(Date.now());
+                    // Ramp-up gradual: la intensidad crece durante los primeros 3 segundos
+                    const elapsed = Date.now() - heartbeatStartTime;
+                    const ramp = Math.min(elapsed / 3000, 1);
                     const cx = canvas.width / 2;
                     const cy = canvas.height / 2;
                     const dx = this.baseX - cx;
                     const dy = this.baseY - cy;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist > 0) {
-                        // Escala de expansión: el corazón "crece" y "se encoge"
-                        const scale = beat * 12;
+                        const scale = beat * 12 * ramp;
                         this.x += (dx / dist) * scale * (dist / 200);
                         this.y += (dy / dist) * scale * (dist / 200);
                     }
@@ -164,15 +166,20 @@
                 msgIndex++;
                 setTimeout(flow, 3200); // Más tiempo para leer y ver el movimiento
             } else {
-                heartMode = true;
+                // Primero: formar el corazón sin latido
                 const pts = getHeart();
                 particles.forEach((p, i) => {
                     let target = pts[i % pts.length];
                     p.baseX = target.x; 
                     p.baseY = target.y;
                     p.color = i % 2 === 0 ? '#ff0040' : '#ff758f';
-                    p.ease = 0.02; // Los corazones se forman con calma
+                    p.ease = 0.02;
                 });
+                // Luego: esperar a que las partículas se asienten y activar el latido
+                setTimeout(() => {
+                    heartMode = true;
+                    heartbeatStartTime = Date.now();
+                }, 3000);
             }
         }
 
