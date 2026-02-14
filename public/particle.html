@@ -267,6 +267,11 @@
         }
 
         function flow() {
+            // Limpiar canvas visible completamente antes de cada transicion
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             if (msgIndex < messages.length) {
                 const pts = getPoints(messages[msgIndex]);
                 particles.forEach((p, i) => {
@@ -274,10 +279,10 @@
                     p.baseX = target.x; 
                     p.baseY = target.y;
                     p.color = '#ff2d55';
-                    p.ease = 0.04; // Transición entre palabras más suave
+                    p.ease = 0.04;
                 });
                 msgIndex++;
-                setTimeout(flow, 3200); // Más tiempo para leer y ver el movimiento
+                setTimeout(flow, 3200);
             } else {
                 // Primero: formar el corazón sin latido
                 const pts = getHeart();
