@@ -17,8 +17,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Morfismo de Partículas - Regalo',
-  description: 'Animacion de particulas con latido de corazon',
+  title: 'Feliz san valentin',
+  description: 'Feliz san valentin mi amor',
   generator: 'v0.app',
 }
 
