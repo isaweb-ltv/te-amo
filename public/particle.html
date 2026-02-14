@@ -58,39 +58,78 @@
                 this.y = Math.random() * canvas.height;
                 this.baseX = this.x;
                 this.baseY = this.y;
-                this.vx = (Math.random() - 0.5) * 1.8;
-                this.vy = (Math.random() - 0.5) * 1.8;
-                this.size = 1.4;
-                this.color = '#fff';
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                // Estrellas: la mayoria pequenas, pocas grandes y brillantes
+                const r = Math.random();
+                this.starSize = r < 0.85 ? 0.5 + Math.random() * 0.8
+                              : r < 0.97 ? 1.5 + Math.random() * 1.2
+                              : 2.8 + Math.random() * 1.5;
+                this.size = this.starSize;
+                // Colores de estrellas: blancas, azuladas, amarillentas
+                const colors = ['#ffffff', '#ffffff', '#ffffff', '#cad8ff', '#aabfff', '#ffe8b0', '#fff4e0', '#ffd2a1'];
+                this.starColor = colors[Math.floor(Math.random() * colors.length)];
+                this.color = this.starColor;
                 this.friction = 0.85;
-                this.ease = 0.06; // Controla la suavidad del morfismo
+                this.ease = 0.06;
+                // Parpadeo: cada estrella tiene su propio ciclo
+                this.twinkleSpeed = 0.001 + Math.random() * 0.004;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                this.opacity = 1;
             }
 
             draw() {
+                ctx.globalAlpha = this.opacity;
+                if (!started && this.starSize > 2) {
+                    // Estrellas grandes tienen resplandor
+                    const glow = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 4);
+                    glow.addColorStop(0, this.color);
+                    glow.addColorStop(0.3, this.color + '66');
+                    glow.addColorStop(1, 'transparent');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.globalAlpha = 1;
             }
 
             update() {
                 if (!started) {
-                    // MODO ESTRELLAS: Repulsión activa y flotado libre
+                    // MODO ESTRELLAS: flotan lentamente y parpadean
+                    const now = Date.now();
+                    // Parpadeo natural: oscila entre 0.2 y 1.0
+                    const twinkle = Math.sin(now * this.twinkleSpeed + this.twinkleOffset);
+                    this.opacity = 0.4 + 0.6 * ((twinkle + 1) / 2);
+                    // Estrellas grandes parpadean menos, pequenas mas
+                    if (this.starSize < 1) {
+                        this.opacity *= 0.3 + 0.7 * ((Math.sin(now * this.twinkleSpeed * 2.5 + this.twinkleOffset) + 1) / 2);
+                    }
+
+                    // Repulsion del mouse
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
                     let dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < mouse.radius) {
                         let force = (mouse.radius - dist) / mouse.radius;
-                        this.x -= (dx / dist) * force * 10;
-                        this.y -= (dy / dist) * force * 10;
+                        this.x -= (dx / dist) * force * 6;
+                        this.y -= (dy / dist) * force * 6;
                     }
 
+                    // Deriva lenta como estrellas en el espacio
                     this.x += this.vx;
                     this.y += this.vy;
                     if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                     if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
                 } else {
+                    // Transicion: restaurar opacidad y tamano para el texto
+                    this.opacity += (1 - this.opacity) * 0.05;
+                    this.size += (1.4 - this.size) * 0.05;
                     // MODO MENSAJE: Morfismo elástico (Atracción magnética)
                     let dx = this.baseX - this.x;
                     let dy = this.baseY - this.y;
@@ -240,7 +279,8 @@
         function init() {
             for(let i=0; i<2500; i++) particles.push(new Particle());
             function loop() {
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                // Fondo negro solido para estrellas limpias; trail suave para texto
+                ctx.fillStyle = started ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,1)';
                 ctx.fillRect(0,0,canvas.width, canvas.height);
                 particles.forEach(p => { p.update(); p.draw(); });
                 requestAnimationFrame(loop);
