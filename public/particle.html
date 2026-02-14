@@ -48,9 +48,9 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-        window.addEventListener('touchstart', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
-        window.addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+        window.addEventListener('mousemove', e => { if (!started) { mouse.x = e.x; mouse.y = e.y; } });
+        window.addEventListener('touchstart', e => { if (!started) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } });
+        window.addEventListener('touchmove', e => { if (!started) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } });
 
         class Particle {
             constructor() {
@@ -131,36 +131,11 @@
                     this.opacity += (1 - this.opacity) * 0.05;
                     this.size += (1.4 - this.size) * 0.05;
 
-                    // Mouse: empujon suave con dispersion aleatoria (no orbital)
-                    let mdx = mouse.x - this.x;
-                    let mdy = mouse.y - this.y;
-                    let mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-                    const repulsionRadius = 100;
-
-                    if (mDist < repulsionRadius && mDist > 0) {
-                        let force = (repulsionRadius - mDist) / repulsionRadius;
-                        force = force * force * 0.6;
-                        // Angulo base + dispersion aleatoria para romper la simetria
-                        let angle = Math.atan2(-mdy, -mdx);
-                        angle += (Math.random() - 0.5) * 1.2;
-                        this.vx += Math.cos(angle) * force * 4;
-                        this.vy += Math.sin(angle) * force * 4;
-                    }
-
-                    // Friccion alta para que frenen rapido y no orbiten
-                    this.vx *= 0.82;
-                    this.vy *= 0.82;
-                    this.x += this.vx;
-                    this.y += this.vy;
-
-                    // Retorno elastico al punto de origen
+                    // Morfismo elastico hacia el punto objetivo
                     let dx = this.baseX - this.x;
                     let dy = this.baseY - this.y;
-                    let returnDist = Math.sqrt(dx * dx + dy * dy);
-                    // Fuerza de retorno progresiva: mas lejos = tira mas fuerte
-                    let returnForce = this.ease + Math.min(returnDist * 0.0003, 0.04);
-                    this.x += dx * returnForce;
-                    this.y += dy * returnForce;
+                    this.x += dx * this.ease;
+                    this.y += dy * this.ease;
                 }
 
                 if (heartMode) {
@@ -315,7 +290,9 @@
         }
 
         btn.onclick = () => { 
-            started = true; 
+            started = true;
+            mouse.x = -1000;
+            mouse.y = -1000;
             btn.style.display='none'; 
             flow(); 
         };
