@@ -170,26 +170,32 @@
             }
         }
 
-        function getPoints(text) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
+        // Canvas oculto para escanear texto sin que se vea en pantalla
+        const offCanvas = document.createElement('canvas');
+        const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
 
-            const maxWidth = canvas.width * 0.85;
-            let fontSize = Math.min(canvas.width / 5, 130);
-            ctx.font = `bold ${fontSize}px Arial`;
+        function getPoints(text) {
+            offCanvas.width = canvas.width;
+            offCanvas.height = canvas.height;
+            offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+            offCtx.fillStyle = "white";
+            offCtx.textAlign = "center";
+            offCtx.textBaseline = "middle";
+
+            const maxWidth = offCanvas.width * 0.85;
+            let fontSize = Math.min(offCanvas.width / 5, 130);
+            offCtx.font = `bold ${fontSize}px Arial`;
 
             const words = text.split(' ');
             let lines = [];
             
-            if (ctx.measureText(text).width <= maxWidth) {
+            if (offCtx.measureText(text).width <= maxWidth) {
                 lines = [text];
             } else {
                 let currentLine = words[0];
                 for (let i = 1; i < words.length; i++) {
                     let testLine = currentLine + ' ' + words[i];
-                    if (ctx.measureText(testLine).width > maxWidth) {
+                    if (offCtx.measureText(testLine).width > maxWidth) {
                         lines.push(currentLine);
                         currentLine = words[i];
                     } else {
@@ -200,28 +206,28 @@
 
                 let fits = false;
                 while (!fits && fontSize > 20) {
-                    ctx.font = `bold ${fontSize}px Arial`;
-                    fits = lines.every(l => ctx.measureText(l).width <= maxWidth);
+                    offCtx.font = `bold ${fontSize}px Arial`;
+                    fits = lines.every(l => offCtx.measureText(l).width <= maxWidth);
                     if (!fits) fontSize -= 2;
                 }
             }
 
             const lineHeight = fontSize * 1.25;
             const totalHeight = lines.length * lineHeight;
-            const startY = canvas.height / 2 - totalHeight / 2 + lineHeight / 2;
+            const startY = offCanvas.height / 2 - totalHeight / 2 + lineHeight / 2;
 
             lines.forEach((line, i) => {
-                ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+                offCtx.fillText(line, offCanvas.width / 2, startY + i * lineHeight);
             });
 
-            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const data = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height).data;
             
             // Recoger pixeles iluminados (step 2 para rendimiento en movil)
             const scanStep = 2;
             const allPts = [];
-            for (let y = 0; y < canvas.height; y += scanStep) {
-                for (let x = 0; x < canvas.width; x += scanStep) {
-                    if (data[(y * canvas.width + x) * 4 + 3] > 128) {
+            for (let y = 0; y < offCanvas.height; y += scanStep) {
+                for (let x = 0; x < offCanvas.width; x += scanStep) {
+                    if (data[(y * offCanvas.width + x) * 4 + 3] > 128) {
                         allPts.push({x, y});
                     }
                 }
