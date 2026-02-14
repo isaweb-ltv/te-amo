@@ -125,20 +125,15 @@
             ctx.textBaseline = "middle";
 
             const maxWidth = canvas.width * 0.85;
-            // Dividir en lineas si el texto es largo
             let fontSize = Math.min(canvas.width / 5, 130);
             ctx.font = `bold ${fontSize}px Arial`;
 
-            // Reducir fuente hasta que quepa en el ancho disponible
-            // o dividir en lineas si tiene espacios
             const words = text.split(' ');
             let lines = [];
             
-            // Intentar primero en una sola linea
             if (ctx.measureText(text).width <= maxWidth) {
                 lines = [text];
             } else {
-                // Dividir en multiples lineas
                 let currentLine = words[0];
                 for (let i = 1; i < words.length; i++) {
                     let testLine = currentLine + ' ' + words[i];
@@ -151,7 +146,6 @@
                 }
                 lines.push(currentLine);
 
-                // Reducir fuente si alguna linea aun no cabe
                 let fits = false;
                 while (!fits && fontSize > 20) {
                     ctx.font = `bold ${fontSize}px Arial`;
@@ -169,12 +163,31 @@
             });
 
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            const pts = [];
-            for (let y = 0; y < canvas.height; y += 3) {
-                for (let x = 0; x < canvas.width; x += 3) {
+            
+            // Primero recoger TODOS los pixeles iluminados
+            const allPts = [];
+            for (let y = 0; y < canvas.height; y += 1) {
+                for (let x = 0; x < canvas.width; x += 1) {
                     if (data[(y * canvas.width + x) * 4 + 3] > 128) {
-                        pts.push({x, y});
+                        allPts.push({x, y});
                     }
+                }
+            }
+
+            // Luego tomar exactamente la cantidad de particulas que tenemos,
+            // distribuidas uniformemente, para que todas las frases se vean igual de densas
+            const targetCount = particles.length;
+            const pts = [];
+            if (allPts.length <= targetCount) {
+                // Pocos pixeles: usar todos y repetir para llenar
+                for (let i = 0; i < targetCount; i++) {
+                    pts.push(allPts[i % allPts.length]);
+                }
+            } else {
+                // Muchos pixeles: muestrear uniformemente
+                const step = allPts.length / targetCount;
+                for (let i = 0; i < targetCount; i++) {
+                    pts.push(allPts[Math.floor(i * step)]);
                 }
             }
             return pts;
