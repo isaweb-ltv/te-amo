@@ -9,12 +9,13 @@
         canvas { display: block; }
         #btn {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 16px 40px; font-size: 22px; background: #ff2d55; color: white;
+            padding: 14px 36px; font-size: clamp(16px, 4vw, 22px); background: #ff2d55; color: white;
             border: none; border-radius: 50px; cursor: pointer; z-index: 100;
             font-family: sans-serif; font-weight: bold; box-shadow: 0 0 20px #ff2d55;
-            transition: 0.3s;
+            transition: 0.3s; -webkit-tap-highlight-color: transparent;
         }
         #btn:hover { background: #ff4d6d; scale: 1.05; }
+        #btn:active { background: #ff4d6d; scale: 0.97; }
     </style>
 </head>
 <body>
@@ -33,6 +34,10 @@
         let heartMode = false;
         let heartbeatStartTime = 0;
 
+        // Detectar movil y ajustar cantidad de particulas
+        const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        const PARTICLE_COUNT = isMobile ? 1200 : 2500;
+
         // Simula el patrón "lub-dub" de un corazón real
         function getHeartbeat(time) {
             // Ciclo de ~1 segundo (como 72 BPM)
@@ -45,8 +50,15 @@
         }
         const messages = ["Te amo", "mi niña", "preciosa", "gracias", "por existir", "Felices 17 meses mi amor ❤"];
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 150);
+        });
 
         window.addEventListener('mousemove', e => { if (!started) { mouse.x = e.x; mouse.y = e.y; } });
         window.addEventListener('touchstart', e => { if (!started) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } });
@@ -204,10 +216,11 @@
 
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             
-            // Primero recoger TODOS los pixeles iluminados
+            // Recoger pixeles iluminados (step 2 para rendimiento en movil)
+            const scanStep = isMobile ? 2 : 1;
             const allPts = [];
-            for (let y = 0; y < canvas.height; y += 1) {
-                for (let x = 0; x < canvas.width; x += 1) {
+            for (let y = 0; y < canvas.height; y += scanStep) {
+                for (let x = 0; x < canvas.width; x += scanStep) {
                     if (data[(y * canvas.width + x) * 4 + 3] > 128) {
                         allPts.push({x, y});
                     }
@@ -236,7 +249,7 @@
         function getHeart() {
             const pts = [];
             const scale = Math.min(canvas.width, canvas.height) / 22;
-            for (let i = 0; i < 2500; i++) {
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
                 let t = Math.random() * Math.PI * 2;
                 let layer = (i % 5) + 1; 
                 let r = (layer * scale) / 5;
@@ -278,7 +291,7 @@
         }
 
         function init() {
-            for(let i=0; i<2500; i++) particles.push(new Particle());
+            for(let i=0; i<PARTICLE_COUNT; i++) particles.push(new Particle());
             function loop() {
                 // Fondo negro solido para estrellas limpias; trail suave para texto
                 ctx.fillStyle = started ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,1)';

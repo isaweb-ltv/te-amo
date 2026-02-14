@@ -6,9 +6,19 @@ import './globals.css'
 const _geist = Geist({ subsets: ['latin'] })
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
+import type { Viewport } from 'next'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#000000',
+}
+
 export const metadata: Metadata = {
   title: 'Morfismo de Partículas - Regalo',
-  description: 'Animación de partículas con latido de corazón',
+  description: 'Animacion de particulas con latido de corazon',
   generator: 'v0.app',
 }
 
