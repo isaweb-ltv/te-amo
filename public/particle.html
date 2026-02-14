@@ -130,7 +130,28 @@
                     // Transicion: restaurar opacidad y tamano para el texto
                     this.opacity += (1 - this.opacity) * 0.05;
                     this.size += (1.4 - this.size) * 0.05;
-                    // MODO MENSAJE: Morfismo elástico (Atracción magnética)
+
+                    // Repulsion del mouse: empuja las particulas
+                    let mdx = mouse.x - this.x;
+                    let mdy = mouse.y - this.y;
+                    let mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+                    const repulsionRadius = 120;
+
+                    if (mDist < repulsionRadius && mDist > 0) {
+                        let force = (repulsionRadius - mDist) / repulsionRadius;
+                        // Fuerza cuadratica para mas impacto cerca del cursor
+                        force = force * force;
+                        this.vx -= (mdx / mDist) * force * 8;
+                        this.vy -= (mdy / mDist) * force * 8;
+                    }
+
+                    // Aplicar velocidad con friccion
+                    this.vx *= 0.88;
+                    this.vy *= 0.88;
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Atraccion elastica de vuelta al punto de origen
                     let dx = this.baseX - this.x;
                     let dy = this.baseY - this.y;
                     this.x += dx * this.ease;
