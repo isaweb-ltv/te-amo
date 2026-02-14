@@ -121,12 +121,53 @@
         function getPoints(text) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "white";
-            let fontSize = Math.min(canvas.width / 5, 130);
-            ctx.font = `bold ${fontSize}px Arial`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            const maxWidth = canvas.width * 0.85;
+            // Dividir en lineas si el texto es largo
+            let fontSize = Math.min(canvas.width / 5, 130);
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            // Reducir fuente hasta que quepa en el ancho disponible
+            // o dividir en lineas si tiene espacios
+            const words = text.split(' ');
+            let lines = [];
             
+            // Intentar primero en una sola linea
+            if (ctx.measureText(text).width <= maxWidth) {
+                lines = [text];
+            } else {
+                // Dividir en multiples lineas
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    let testLine = currentLine + ' ' + words[i];
+                    if (ctx.measureText(testLine).width > maxWidth) {
+                        lines.push(currentLine);
+                        currentLine = words[i];
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                lines.push(currentLine);
+
+                // Reducir fuente si alguna linea aun no cabe
+                let fits = false;
+                while (!fits && fontSize > 20) {
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    fits = lines.every(l => ctx.measureText(l).width <= maxWidth);
+                    if (!fits) fontSize -= 2;
+                }
+            }
+
+            const lineHeight = fontSize * 1.25;
+            const totalHeight = lines.length * lineHeight;
+            const startY = canvas.height / 2 - totalHeight / 2 + lineHeight / 2;
+
+            lines.forEach((line, i) => {
+                ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+            });
+
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             const pts = [];
             for (let y = 0; y < canvas.height; y += 3) {
